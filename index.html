@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <title></title>   
+    <link href="css/mui.min.css" rel="stylesheet"/> 
+    <link href="css/index.css" rel="stylesheet"/> 
+    <style type="text/css">
+			html,body{
+				margin: 0;
+				padding: 0;
+			}
+    	html{
+    		font-size: 10px;
+    		background-color: white;
+    	}
+		.homeTop {
+		    position: relative;
+		    background: url("images/bg.png");
+		    height: 10rem;
+		    background-size: 100% 100%;
+		}
+
+		.homeTop .code{
+			position: absolute;
+			top:1rem;
+			right: 1rem;
+			width: 10%;
+		}
+		.homeTop span {
+		    color: white;
+		    font-weight: 500;
+		    font-size: 2.5rem;  
+				letter-spacing: .5rem;
+		}
+		ul{
+			padding: 1rem 1rem 0 1rem !important;
+		}
+		ul img{
+			width: 100%;
+		}
+		.mui-table-view img:active{
+			box-shadow: 3px 5px 5px #9c8f8f;
+		}
+		.mui-table-view:after{
+			display: none;
+		}
+		.homeTop .code{
+			position: absolute;
+			top:1rem;
+			right: 1rem;
+		}
+		@media only screen and (min-width: 320px){
+			.homeTop{
+				height: 11rem;
+			} 
+		}
+		@media only screen and (min-width: 375px){
+				.homeTop{
+					height: 13rem;
+				} 
+		}
+		@media only screen and (min-width: 414px){
+				.homeTop{
+					height: 15rem;
+				} 
+		}
+
+    </style>
+</head>
+<body>
+	<div class="mui-content" id='content' >
+		<div class="homePage_top">
+			<!--标题-->
+			<div class="homeTop rowf ac M">
+	            <span class="text_center">医废打包查询系统</span>
+	            <img class="code" src="images/user.png" >
+	        </div>
+	        
+		    <ul class="mui-table-view">	
+	      </ul>
+	   </div>
+	</div>
+</body>
+</html>
+<script src="js/mui.min.js"></script>
+<script src="js/index.js"></script>
+<script src="js/jquery-3.0.0.min.js"></script>
+<script src="js/vue.js"></script>
+<script type="text/javascript" charset="utf-8">
+      	mui.init();
+		mui.plusReady(function(){
+				plus.runtime.getProperty(plus.runtime.appid,function(inf){
+　　　　　　vm.old_version=inf.version;
+　　　　});
+			//最新版本下载
+   			vm.updata();
+		});
+//    	模块功能展示
+      	var img= [
+					{ModuleKey: "Pack", pic: "images/pack_3.png"},
+      	{ModuleKey: "Search", pic: "images/search_3.png"},     	
+      	{ModuleKey: "aboutUs", pic:"images/about_3.png"}];
+				var html = '';
+      	img.map(function(item,index){					
+      		html+='<li class="'+item.ModuleKey+'">'+      	
+      						'<img  src="'+item.pic+'" alt="">'+
+      						'</li>'; 					
+      	});
+				$('.homePage_top .mui-table-view').append(html);
+				   	
+      	
+		var vm = new Vue({
+            el:'#content',
+            data:{
+            	old_version:''
+            },
+            methods:{
+            	updata:function(a){
+            		that = this;  
+							$.get(url_all+"/api/PackMobileV1/GetLastVersion",
+								{ },
+								function(data){
+									if(that.old_version.replace('.', '')<data.data.PackageVersion.replace('.', '')){
+										var btnArray = ['否', '是'];
+										mui.confirm('已有最新版本是否下载？', '提示', btnArray, function(e) {
+											if (e.index == 1) {
+												mui.toast('正在下载最新版本')
+															var ua = navigator.userAgent.toLowerCase();
+															 if(/iphone|ipad|ipod/.test(ua)) {
+														plus.runtime.openURL(data.data.Url);
+														}else if(/android/.test(ua)){
+													var dtask = plus.downloader.createDownload( data.data.Url, {}, function ( d, status ) {
+															if ( status == 200 ) { // 下载成功
+																	var path = d.filename;
+																	plus.runtime.install(path);  // 安装下载的apk文件
+															} else {//下载失败			
+																	mui.toast( "Download failed: " + status ); 
+															}  
+													});
+													dtask.start(); 
+														}else{
+															return ;
+														}
+												
+																						
+											} else {
+												mui.toast('取消下载')
+											}
+										})
+										
+									}else{
+										mui.toast('已经是最新版本')
+									}
+								}
+							);
+
+            	}           	
+
+            }  
+   		});
+//		进入模块
+		$('.mui-table-view').on('tap','li',function(){
+			if(plus.networkinfo.getCurrentType() == plus.networkinfo.CONNECTION_UNKNOW || plus.networkinfo.getCurrentType() == plus.networkinfo.CONNECTION_NONE) {
+					plus.nativeUI.toast("当前网络异常，请检查后重试");
+					return;
+			}
+			var html = $(this).attr('class');
+      			var pageOne = plus.webview.getWebviewById(html);
+						if(pageOne == null){
+							mui.openWindow({
+								url: 'html/'+html+'/'+html+'.html', 
+								id:html,
+								show:{
+										aniShow:'slide-in-right',
+										duration:300
+									},
+								waiting:{
+									autoShow:false
+								}
+							});
+						}else{
+							pageOne.close();
+						};
+      	})	;
+				mui('.homeTop').on('tap','.code',function(){
+					mui.openWindow({
+						url: 'html/personal/personal.html', 
+						id:'personal',
+						show:{
+								aniShow:'slide-in-right',
+								duration:300
+							},
+						waiting:{
+							autoShow:false
+						}
+					});			    
+				});
+				
+      	      	
+      	/**
+		 * Android返回键处理（IOS只能通过home键来杀掉程序）
+		 * 返回逻辑：一秒内连续点击两次，退出程序；
+		 * 这个官方已经写的很明白了，这里需要加上这一段代码，防止返回到入口页面；
+		 */
+		var first = null;
+		mui.back = function() {
+			if (!first) {
+				first = new Date().getTime();
+				plus.nativeUI.toast("再按一次退出应用");
+				setTimeout(function() {
+					first = null;
+				}, 1000);
+			} else {
+				if (new Date().getTime() - first < 1000) {
+					plus.runtime.quit();
+				}
+			}
+		}
+    </script>
